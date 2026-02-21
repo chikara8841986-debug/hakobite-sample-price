@@ -1,30 +1,16 @@
-# ハコビテ 料金計算シミュレーター
+# React + Vite
 
-介護タクシー「ハコビテ」の運賃および各種オプション料金をシミュレーションするためのReactアプリケーションです。
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## 主な機能
-- **運賃計算**: 走行距離に応じたメーター料金の自動計算（初乗り 1.5km 750円、以降 250m ごとに 80円加算）
-- **福祉車両基本料**: 福祉車両の使用に伴う基本料金（1,000円）の自動加算
-- **オプション料金**:
-    - 身体介護料（500円）の有無を選択可能
-    - 車いすレンタル（普通型：500円/泊、リクライニング：700円/泊）の泊数に応じた計算
-- **ルート確認**: 入力された出発地・目的地をもとに Google マップでのルート確認が可能
+Currently, two official plugins are available:
 
-## 料金設定の詳細
-このシミュレーターは、以下の設定に基づいて計算を行っています。
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-| 項目 | 料金設定 |
-| :--- | :--- |
-| 初乗り運賃 | 1.5kmまで 750円 |
-| 加算運賃 | 250mごとに 80円 |
-| 福祉車両代 | 1,000円（固定） |
-| 身体介護代 | 500円 |
-| 普通型車いす | 500円 / 泊 |
-| リクライニング | 700円 / 泊 |
+## React Compiler
 
-## 技術スタック
-- React
-- JavaScript (ES6+)
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
----
-© 2026 ハコビテ
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
