@@ -41,7 +41,6 @@ export default function TaxiFareCalculator() {
 
   return (
     <div style={{ ...base, minHeight: "100vh", background: C.cream, fontFamily: "sans-serif", color: C.text, width: "100%", margin: 0, padding: 0 }}>
-      {/* ViteのデフォルトCSSを無効化する強制リセット */}
       <style>{`
         body, html, #root { 
           margin: 0 !important; 
@@ -58,7 +57,6 @@ export default function TaxiFareCalculator() {
         </h1>
       </div>
 
-      {/* スマホで横幅いっぱいに、PCでは中央に寄せる設定 */}
       <div style={{ ...base, maxWidth: "600px", width: "100%", margin: "0 auto", padding: "16px" }}>
         <div style={{ ...base, background: C.cardBg, padding: "20px", borderRadius: "12px", border: `1px solid ${C.border}`, marginBottom: "16px", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" }}>
           <label style={{ fontSize: "14px", fontWeight: "bold", display: "block", marginBottom: "8px" }}>📍 走行距離 (km)</label>
@@ -68,7 +66,7 @@ export default function TaxiFareCalculator() {
         <div style={{ ...base, background: C.cardBg, padding: "20px", borderRadius: "12px", border: `1px solid ${C.border}`, marginBottom: "16px" }}>
           <div style={{ fontWeight: "bold", fontSize: "14px", marginBottom: "12px" }}>⚙ オプション</div>
           <div onClick={() => setNeedsCare(!needsCare)} style={{ ...itemStyle, background: needsCare ? C.orangeBg : C.cream, border: `1px solid ${needsCare ? C.orange : C.border}` }}>
-            <span>🤝 身体介護 (+¥500)</span>
+            <span>🤝 身体介護等 (+¥500)</span>
             <div style={{ ...toggle, background: needsCare ? C.orange : "#ccc" }} />
           </div>
           <div onClick={() => setIsNight(!isNight)} style={{ ...itemStyle, background: isNight ? "#f3eff8" : C.cream, border: `1px solid ${isNight ? "#7b5ea7" : C.border}` }}>
@@ -104,7 +102,7 @@ export default function TaxiFareCalculator() {
             <div style={{ fontSize: "14px", marginTop: "12px", borderTop: "1px solid #ccc", paddingTop: "12px" }}>
               <div style={row}><span>メーター運賃 ({result.dist}km)</span> <span>¥{result.meter.toLocaleString()}</span></div>
               <div style={row}><span>福祉車両基本料</span> <span>¥{result.fukushi.toLocaleString()}</span></div>
-              {result.body > 0 && <div style={row}><span>身体介護料</span> <span>¥{result.body.toLocaleString()}</span></div>}
+              {result.body > 0 && <div style={row}><span>身体介護等</span> <span>¥{result.body.toLocaleString()}</span></div>}
               {result.wc > 0 && <div style={row}><span>車椅子レンタル ({result.n}泊)</span> <span>¥{result.wc.toLocaleString()}</span></div>}
             </div>
           </div>
