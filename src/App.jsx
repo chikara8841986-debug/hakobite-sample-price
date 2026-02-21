@@ -1,41 +1,10 @@
 import { useState } from "react";
 
-// 福祉タクシー運賃設定
 const FARE_CONFIG = {
-  baseFare: 750,          // 初乗り運賃（固定）
-  meterFare: 80,          // 加算運賃
-  meterDistance: 0.250,   // 加算距離単位（250m）
-  welfareFee: 1000,       // 福祉車両基本料
-  careFee: 500,           // 身体介護料
-  nightSurcharge: 1.2,    // 深夜割増
-  wheelchair: { normal: 500, reclining: 700 }
+  baseFare: 750, welfareFee: 1000, careFee: 500,
+  meterFare: 80, meterDistance: 0.250,
+  nightSurcharge: 1.2, wheelchair: { normal: 500, reclining: 700 }
 };
-
-function calculateFare(distanceKm, options = {}) {
-  if (distanceKm <= 0) return null;
-  const { isNight = false, needsCare = false, wheelchairType = "none", nights = 0 } = options;
-  
-  // メーター運賃計算（1.5kmの差し引きをせず、0kmから加算運賃を計算）
-  const units = Math.ceil(distanceKm / FARE_CONFIG.meterDistance);
-  let meterFare = FARE_CONFIG.baseFare + (units * FARE_CONFIG.meterFare);
-  
-  if (isNight) {
-    meterFare = Math.ceil(meterFare * FARE_CONFIG.nightSurcharge / 10) * 10;
-  }
-  
-  const welfareFee = FARE_CONFIG.welfareFee;
-  const careFee = needsCare ? FARE_CONFIG.careFee : 0;
-  
-  let wheelchairFee = 0;
-  const stayNights = parseInt(nights) || 0;
-  if (stayNights >= 1) {
-    if (wheelchairType === "normal") wheelchairFee = FARE_CONFIG.wheelchair.normal * stayNights;
-    if (wheelchairType === "reclining") wheelchairFee = FARE_CONFIG.wheelchair.reclining * stayNights;
-  }
-  
-  const total = meterFare + welfareFee + careFee + wheelchairFee;
-  return { meterFare, welfareFee, careFee, wheelchairFee, total, stayNights };
-}
 
 export default function TaxiFareCalculator() {
   const [tripKm, setTripKm] = useState("");
@@ -45,84 +14,90 @@ export default function TaxiFareCalculator() {
   const [nights, setNights] = useState("0");
   const [result, setResult] = useState(null);
 
-  const handleCalculate = () => {
-    const totalDist = parseFloat(tripKm) || 0;
-    if (totalDist <= 0) {
-      alert("走行距離を入力してください。");
-      return;
+  const calculate = () => {
+    const dist = parseFloat(tripKm) || 0;
+    if (dist <= 0) return alert("走行距離を入力してください。");
+
+    const units = Math.ceil(dist / FARE_CONFIG.meterDistance);
+    let meter = FARE_CONFIG.baseFare + (units * FARE_CONFIG.meterFare);
+    if (isNight) meter = Math.ceil(meter * FARE_CONFIG.nightSurcharge / 10) * 10;
+
+    const body = needsCare ? FARE_CONFIG.careFee : 0;
+    const n = parseInt(nights) || 0;
+    let wc = 0;
+    if (n >= 1) {
+      if (wheelchairType === "normal") wc = FARE_CONFIG.wheelchair.normal * n;
+      if (wheelchairType === "reclining") wc = FARE_CONFIG.wheelchair.reclining * n;
     }
-    const res = calculateFare(totalDist, { isNight, needsCare, wheelchairType, nights });
-    setResult({ ...res, distance: totalDist });
+
+    setResult({ meter, fukushi: FARE_CONFIG.welfareFee, body, wc, total: meter + FARE_CONFIG.welfareFee + body + wc, dist, n });
   };
 
   const C = {
     green: "#5b8c3e", greenLight: "#6fa34a", greenBg: "#eef5e6",
-    orange: "#e88634", orangeLight: "#f5a623", orangeBg: "#fef5eb",
-    cream: "#faf7f2", cardBg: "#ffffff", border: "#e5ddd2",
-    text: "#3d3529", textMid: "#6b5e4f", textLight: "#8a7d6e",
-    purple: "#7b5ea7", purpleBg: "#f3eff8"
+    orange: "#e88634", orangeBg: "#fef5eb", cream: "#faf7f2",
+    cardBg: "#ffffff", border: "#e5ddd2", text: "#333333"
   };
 
+  // 共通スタイル（スマホでの余白問題を解決）
+  const baseStyle = { boxSizing: "border-box" };
+  const inputStyle = { ...baseStyle, width: "100%", padding: "12px", background: C.cream, border: `1px solid ${C.border}`, borderRadius: "8px", color: C.text, fontSize: "16px", fontWeight: "bold" };
+
   return (
-    <div style={{ minHeight: "100vh", background: `linear-gradient(180deg, ${C.cream} 0%, #f5f0e8 100%)`, fontFamily: "sans-serif", color: C.text, padding: 0 }}>
-      <div style={{ background: `linear-gradient(135deg, ${C.green}, ${C.greenLight})`, padding: "24px 20px", textAlign: "center" }}>
-        <h1 style={{ fontSize: "22px", fontWeight: 800, margin: 0, color: "#fff", letterSpacing: "0.08em", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-          <span style={{ fontSize: "26px" }}>🚕</span> ハコビテ 料金試算
+    <div style={{ ...baseStyle, minHeight: "100vh", background: C.cream, fontFamily: "sans-serif", color: C.text, width: "100%", overflowX: "hidden" }}>
+      <div style={{ ...baseStyle, background: `linear-gradient(135deg, ${C.green}, ${C.greenLight})`, padding: "24px 16px", textAlign: "center", color: "#fff", width: "100%" }}>
+        <h1 style={{ margin: 0, fontSize: "20px", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+          <span>🚕</span> ハコビテ 料金試算
         </h1>
       </div>
 
-      <div style={{ maxWidth: "520px", margin: "0 auto", padding: "24px 16px" }}>
-        <div style={{ background: C.cardBg, border: `1px solid ${C.border}`, borderRadius: "12px", padding: "24px 20px", marginBottom: "16px", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-          <div style={{ fontSize: "14px", fontWeight: 700, color: C.green, marginBottom: "16px" }}>📍 走行距離の入力 (km)</div>
-          <div style={{ marginBottom: "10px" }}>
-            <label style={{ fontSize: "12px", color: C.textMid, display: "block", marginBottom: "4px" }}>迎車先 〜 送り先</label>
-            <input type="number" step="0.1" value={tripKm} onChange={e => setTripKm(e.target.value)} style={inputStyle(C)} placeholder="0.0" />
-          </div>
+      <div style={{ ...baseStyle, maxWidth: "500px", width: "100%", margin: "0 auto", padding: "16px" }}>
+        <div style={{ ...baseStyle, background: C.cardBg, padding: "20px", borderRadius: "12px", border: `1px solid ${C.border}`, marginBottom: "16px", boxShadow: "0 2px 4px rgba(0,0,0,0.05)" }}>
+          <label style={{ fontSize: "14px", fontWeight: "bold", display: "block", marginBottom: "8px" }}>📍 走行距離 (km)</label>
+          <input type="number" step="0.1" value={tripKm} onChange={e => setTripKm(e.target.value)} style={inputStyle} placeholder="例: 4.5" />
         </div>
 
-        <div style={{ background: C.cardBg, border: `1px solid ${C.border}`, borderRadius: "12px", padding: "24px 20px", marginBottom: "16px" }}>
-          <div style={{ fontSize: "14px", fontWeight: 700, color: C.green, marginBottom: "16px" }}>⚙ オプション選択</div>
-          <div onClick={() => setNeedsCare(!needsCare)} style={toggleStyle(needsCare, C.orange, C.orangeBg, C)}>
-            <div style={{ fontSize: "13px", fontWeight: 600 }}>🤝 身体介護あり (+¥500)</div>
-            <div style={switchStyle(needsCare, C.orange)}></div>
+        <div style={{ ...baseStyle, background: C.cardBg, padding: "20px", borderRadius: "12px", border: `1px solid ${C.border}`, marginBottom: "16px" }}>
+          <div style={{ fontWeight: "bold", fontSize: "14px", marginBottom: "12px" }}>⚙ オプション</div>
+          <div onClick={() => setNeedsCare(!needsCare)} style={{ ...itemStyle, background: needsCare ? C.orangeBg : C.cream, border: `1px solid ${needsCare ? C.orange : C.border}` }}>
+            <span>🤝 身体介護 (+¥500)</span>
+            <div style={{ ...toggle, background: needsCare ? C.orange : "#ccc" }} />
           </div>
-          <div onClick={() => setIsNight(!isNight)} style={toggleStyle(isNight, C.purple, C.purpleBg, C)}>
-            <div style={{ fontSize: "13px", fontWeight: 600 }}>🌙 深夜割増 (22時〜5時)</div>
-            <div style={switchStyle(isNight, C.purple)}></div>
+          <div onClick={() => setIsNight(!isNight)} style={{ ...itemStyle, background: isNight ? "#f3eff8" : C.cream, border: `1px solid ${isNight ? "#7b5ea7" : C.border}` }}>
+            <span>🌙 深夜割増 (22時〜5時)</span>
+            <div style={{ ...toggle, background: isNight ? "#7b5ea7" : "#ccc" }} />
           </div>
           <div style={{ marginTop: "16px" }}>
-            <div style={{ fontSize: "12px", fontWeight: 600, color: C.textMid, marginBottom: "8px" }}>🦽 車椅子レンタル</div>
+            <div style={{ fontSize: "12px", fontWeight: "bold", marginBottom: "8px" }}>🦽 車椅子レンタル</div>
             <div style={{ display: "flex", gap: "8px" }}>
-              {["none", "normal", "reclining"].map(type => (
-                <button key={type} onClick={() => setWheelchairType(type)} style={btnOptStyle(wheelchairType === type, C)}>
-                  {type === "none" ? "なし" : type === "normal" ? "普通型" : "リクライニング"}
+              {["none", "normal", "reclining"].map(t => (
+                <button key={t} onClick={() => setWheelchairType(t)} style={{ ...btn, background: wheelchairType === t ? C.greenBg : "#fff", borderColor: wheelchairType === t ? C.green : C.border, color: wheelchairType === t ? C.green : C.text }}>
+                  {t === "none" ? "なし" : t === "normal" ? "普通型" : "リクライニング"}
                 </button>
               ))}
             </div>
             {wheelchairType !== "none" && (
               <div style={{ marginTop: "10px" }}>
-                <label style={{ fontSize: "11px", color: C.textLight, display: "block", marginBottom: "4px" }}>レンタル泊数</label>
-                <input type="number" value={nights} onChange={e => setNights(e.target.value)} style={inputStyle(C)} placeholder="泊数" />
+                <label style={{ fontSize: "11px", color: "#666", display: "block", marginBottom: "4px" }}>レンタル泊数</label>
+                <input type="number" value={nights} onChange={e => setNights(e.target.value)} style={inputStyle} />
               </div>
             )}
           </div>
         </div>
 
-        <button onClick={handleCalculate} style={{ width: "100%", padding: "16px", background: `linear-gradient(135deg, ${C.green}, ${C.greenLight})`, border: "none", borderRadius: "10px", color: "#fff", fontSize: "16px", fontWeight: 700, cursor: "pointer", boxShadow: `0 4px 16px rgba(91,140,62,0.3)` }}>
-          🚕 料金を計算する
-        </button>
+        <button onClick={calculate} style={{ ...baseStyle, width: "100%", padding: "16px", background: C.green, color: "#fff", border: "none", borderRadius: "10px", fontSize: "16px", fontWeight: "bold", cursor: "pointer", boxShadow: "0 4px 12px rgba(91,140,62,0.2)" }}>料金を計算する</button>
 
         {result && (
-          <div style={{ marginTop: "20px", background: C.cardBg, border: `1px solid ${C.border}`, borderRadius: "12px", overflow: "hidden" }}>
-            <div style={{ padding: "24px", background: C.greenBg, textAlign: "center" }}>
-              <div style={{ fontSize: "12px", color: C.textLight }}>概算合計料金</div>
-              <div style={{ fontSize: "36px", fontWeight: 800, color: C.green }}>¥{result.total.toLocaleString()}</div>
+          <div style={{ ...baseStyle, marginTop: "20px", background: C.greenBg, borderRadius: "12px", padding: "20px", border: `1px solid ${C.green}30` }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "13px", color: "#666" }}>概算合計料金</div>
+              <div style={{ fontSize: "36px", fontWeight: "bold", color: C.green, margin: "4px 0" }}>¥{result.total.toLocaleString()}</div>
             </div>
-            <div style={{ padding: "16px 20px" }}>
-              <div style={rowStyle}><span>メーター運賃 ({result.distance.toFixed(1)}km)</span> <span>¥{result.meterFare.toLocaleString()}</span></div>
-              <div style={rowStyle}><span>福祉車両基本料</span> <span>¥{result.welfareFee.toLocaleString()}</span></div>
-              {result.careFee > 0 && <div style={rowStyle}><span>身体介護料</span> <span>¥{result.careFee.toLocaleString()}</span></div>}
-              {result.wheelchairFee > 0 && <div style={rowStyle}><span>車椅子 ({result.stayNights}泊)</span> <span>¥{result.wheelchairFee.toLocaleString()}</span></div>}
+            <div style={{ fontSize: "14px", marginTop: "12px", borderTop: "1px solid #ccc", paddingTop: "12px" }}>
+              <div style={row}><span>メーター運賃 ({result.dist}km)</span> <span>¥{result.meter.toLocaleString()}</span></div>
+              <div style={row}><span>福祉車両基本料</span> <span>¥{result.fukushi.toLocaleString()}</span></div>
+              {result.body > 0 && <div style={row}><span>身体介護料</span> <span>¥{result.body.toLocaleString()}</span></div>}
+              {result.wc > 0 && <div style={row}><span>車椅子レンタル ({result.n}泊)</span> <span>¥{result.wc.toLocaleString()}</span></div>}
             </div>
           </div>
         )}
@@ -131,8 +106,7 @@ export default function TaxiFareCalculator() {
   );
 }
 
-const inputStyle = (C) => ({ width: "100%", padding: "12px", background: C.cream, border: `1px solid ${C.border}`, borderRadius: "8px", boxSizing: "border-box", color: C.text, fontSize: "16px" });
-const toggleStyle = (active, color, bg, C) => ({ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", marginBottom: "8px", background: active ? bg : C.cream, border: `1px solid ${active ? color : C.border}`, borderRadius: "8px", cursor: "pointer" });
-const switchStyle = (active, color) => ({ width: "40px", height: "20px", background: active ? color : "#ccc", borderRadius: "10px", position: "relative" });
-const btnOptStyle = (active, C) => ({ flex: 1, padding: "10px", background: active ? C.greenBg : C.cream, border: `2px solid ${active ? C.green : C.border}`, borderRadius: "8px", cursor: "pointer", fontSize: "12px", fontWeight: 600, color: active ? C.green : C.textMid });
-const rowStyle = { display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "14px" };
+const itemStyle = { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px", borderRadius: "8px", cursor: "pointer", marginBottom: "8px", fontSize: "14px", boxSizing: "border-box" };
+const toggle = { width: "36px", height: "18px", borderRadius: "9px", transition: "0.3s" };
+const btn = { flex: 1, padding: "10px 4px", border: "1px solid", borderRadius: "8px", fontSize: "12px", fontWeight: "bold", cursor: "pointer", transition: "0.2s", boxSizing: "border-box" };
+const row = { display: "flex", justifyContent: "space-between", marginBottom: "8px" };
